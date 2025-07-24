@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prueba Agenda Sheety</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+  <section class="container py-5" id="agenda">
+    <h2 class="agenda__title text-center mb-4">Agenda de Cursos</h2>
+    <table class="agenda__table table table-bordered">
+      <thead class="agenda__thead">
+        <tr>
+          <th class="agenda__th">Cursos</th>
+          <th class="agenda__th">Fecha y Horario</th>
+          <th class="agenda__th">Reservaciones</th>
+          <th class="agenda__th">Acción</th>
+        </tr>
+      </thead>
+      <tbody class="agenda__tbody">
+        <!-- Datos cargados dinámicamente -->
+      </tbody>
+    </table>
+  </section>
+
+  <script>
+    const API_SHEETY = "https://api.sheety.co/065dd98fb4f1016e88c6395c2b100f9c/agenda/sheet1";
+
+    fetch(API_SHEETY)
+      .then(response => response.json())
+      .then(data => {
+        console.log("Datos recibidos:", data);
+
+        const filas = data.sheet1 || [];
+        const tbody = document.querySelector(".agenda__tbody");
+        tbody.innerHTML = "";
+
+        filas.forEach((fila, index) => {
+          const cursos = fila.cursos || "";
+          const fechaYHorario = fila.fechaYHorario || "";
+          const reservaciones = fila.reservaciones || "";
+
+          const puedeReservar = reservaciones.toLowerCase().includes("reservar");
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${cursos}</td>
+              <td>${fechaYHorario}</td>
+              <td>${reservaciones}</td>
+              <td>
+                ${
+                  puedeReservar
+                    ? `<button class="btn btn-sm btn-primary reservar-btn" data-index="${index}">Reservar</button>`
+                    : `<button class="btn btn-sm btn-secondary" disabled>No disponible</button>`
+                }
+              </td>
+            </tr>
+          `;
+        });
+
+        document.querySelectorAll(".reservar-btn").forEach(btn => {
+          btn.addEventListener("click", e => {
+            const i = e.target.dataset.index;
+            const curso = filas[i];
+            alert(`Reservar: ${curso.cursos} - ${curso.fechaYHorario}`);
+            // Aquí podrías redirigir a un formulario real si quieres
+          });
+        });
+      })
+      .catch(error => {
+        console.error("Error al obtener datos:", error);
+        const tbody = document.querySelector(".agenda__tbody");
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">Error cargando la agenda. Intente más tarde.</td></tr>`;
+      });
+  </script>
+</body>
+</html>

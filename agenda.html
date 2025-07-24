@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" href="logo.ico" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <title>Agenda de Cursos - AGIO</title>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+  <div class="container d-flex align-items-center">
+    <a class="navbar-brand d-flex align-items-center" href="index.html" style="padding: 0;">
+      <img src="logoagio1.jpeg" alt="Logo AGIO" style="height: 40px; margin-right: 6px;" />
+    </a>
+
+    <button
+      class="navbar-toggler ms-auto"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarNav"
+      aria-controls="navbarNav"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+        <li class="nav-item"><a class="nav-link" href="agenda.html">Agenda de Cursos</a></li>
+        <li class="nav-item"><a class="nav-link" href="organizacion.html">Organización</a></li>
+        <li class="nav-item"><a class="nav-link" href="coopInt.html">Cooperación Internacional</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+
+<section class="container py-5" data-aos="fade-up" data-aos-duration="900" data-aos-delay="200">
+  <h2 class="agenda__title text-center mb-4">
+    Agenda de servicios de capacitación abierta al público ENERO - DICIEMBRE 2025 (Videoconferencia - Taller)
+  </h2>
+  <p class="agenda__subtext text-center" style="font-size: larger;">La reservación del espacio está sujeta a confirmación de AGIO.</p>
+  <p class="agenda__subtext text-center mb-5" style="font-size: larger;">Se aplica descuento según el curso y cantidad de personas.</p>
+  <div id="contenedor-agenda"></div>
+</section>
+
+<div class="modal fade" id="modalReserva" tabindex="-1" aria-labelledby="modalReservaLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="formReservaModal">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalReservaLabel">Reservar curso</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Campo visible para mostrar el curso -->
+          <div class="mb-3">
+            <label class="form-label">Curso</label>
+            <input type="text" class="form-control" id="cursoModalVisible" readonly>
+          </div>
+          <!-- Campo oculto que se envía a la hoja -->
+          <input type="hidden" id="cursoModal" name="curso">
+
+          <div class="mb-3"><label class="form-label">Nombre</label><input type="text" class="form-control" id="nombreModal" required></div>
+          <div class="mb-3"><label class="form-label">Empresa</label><input type="text" class="form-control" id="empresaModal" required></div>
+          <div class="mb-3"><label class="form-label">Teléfono</label><input type="tel" class="form-control" id="telefonoModal" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="emailModal" required></div>
+          <div class="mb-3"><label class="form-label">Espacios</label><input type="number" class="form-control" id="espacioModal" required></div>
+          <div class="mb-3"><label class="form-label">Comentarios</label><textarea class="form-control" id="comentariosModal"></textarea></div>
+        </div>
+        <div class="modal-footer flex-column align-items-start">
+          <div class="g-recaptcha mb-2" data-sitekey="6Lew7IwrAAAAAGIIrtDDpNkqiOpGz0gtPLXUwWVf"></div>
+          <button type="submit" class="btn btn-danger">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  const API = "https://api.sheety.co/065dd98fb4f1016e88c6395c2b100f9c/agenda/sheet1";
+
+  fetch(API)
+    .then(res => res.json())
+    .then(data => {
+      const filas = data.sheet1;
+      const contenedor = document.getElementById("contenedor-agenda");
+      const grupos = {};
+
+      filas.forEach((fila, index) => {
+        const mes = fila.mes || "Sin mes";
+        if (!grupos[mes]) grupos[mes] = [];
+        grupos[mes].push({ ...fila, index });
+      });
+
+      Object.keys(grupos).forEach(mes => {
+        let tabla = `
+          <h3 class="agenda__mes mt-5 mb-3">${mes}</h3>
+          <div class="table-responsive">
+            <table class="agenda__table table table-bordered align-middle">
+              <thead class="agenda__thead table-dark">
+                <tr>
+                  <th class="text-start w-50">Cursos</th>
+                  <th class="text-start w-30">Fecha y Horario</th>
+                  <th class="text-center w-20">Reservar</th>
+                </tr>
+              </thead>
+              <tbody>
+        `;
+
+        grupos[mes].forEach(fila => {
+          const puedeReservar = fila.reservaciones?.toLowerCase().includes("reservar");
+          tabla += `
+            <tr>
+              <td class="agenda__curso text-start w-50">${fila.cursos}</td>
+              <td class="text-start w-30">${fila.fechaYHorario}</td>
+              <td class="text-center w-20">
+                ${
+                  puedeReservar
+                    ? `<button class="btn btn-sm btn-danger reservar-btn" data-curso="${fila.cursos}" data-bs-toggle="modal" data-bs-target="#modalReserva">Reservar</button>`
+                    : `<button class="btn btn-sm btn-secondary" disabled>No disponible</button>`
+                }
+              </td>
+            </tr>
+          `;
+        });
+
+        tabla += `</tbody></table></div>`;
+        contenedor.innerHTML += tabla;
+      });
+
+      setTimeout(() => {
+        document.querySelectorAll(".reservar-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const curso = btn.dataset.curso;
+            document.getElementById("cursoModal").value = curso;
+            document.getElementById("cursoModalVisible").value = curso;
+          });
+        });
+      }, 300);
+    });
+</script>
+
+<script>
+  document.getElementById("formReservaModal").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const response = grecaptcha.getResponse();
+    if (!response) {
+      alert("Por favor, confirme que no es un robot.");
+      return;
+    }
+
+    const datos = {
+      sheet2: {
+        nombre: document.getElementById("nombreModal").value,
+        empresa: document.getElementById("empresaModal").value,
+        telefono: document.getElementById("telefonoModal").value,
+        email: document.getElementById("emailModal").value,
+        curso: document.getElementById("cursoModal").value,
+        espacio: document.getElementById("espacioModal").value,
+        comentarios: document.getElementById("comentariosModal").value
+      }
+    };
+
+    fetch("https://api.sheety.co/065dd98fb4f1016e88c6395c2b100f9c/agenda/sheet2", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(datos)
+    })
+    .then(res => res.json())
+    .then(() => {
+      alert("Reserva enviada correctamente.");
+      bootstrap.Modal.getInstance(document.getElementById("modalReserva")).hide();
+      document.getElementById("formReservaModal").reset();
+      grecaptcha.reset();
+    })
+    .catch(() => alert("Error al enviar. Intente más tarde."));
+  });
+</script>
+
+
+<footer class="footer-agio bg-dark text-white pt-4 pb-3 mt-5" data-aos="fade-up" data-aos-duration="900" data-aos-delay="500">
+  <div class="container">
+    <div class="row text-center text-md-start mb-4">
+      <div class="col-md-3 mb-3">
+        <h6 class="text-uppercase fw-bold">Dirección</h6>
+        <p class="mb-0">Costa Rica, San José, Pavas. Oficentro La Virgen. Torre 8 Piso 4.</p>
+      </div>
+
+     <div class="col-12 col-md-3 mb-3">
+  <h6 class="text-uppercase fw-bold">Teléfonos</h6>
+  <p class="mb-1">
+    <a href="tel:+50625302900" class="footer-link text-white text-decoration-none">
+      <i class="fas fa-phone"></i> +506 2530-2900
+    </a>
+  </p>
+  <p>
+    <a href="https://wa.me/50683293582" target="_blank" class="footer-link text-white text-decoration-none">
+      <i class="fab fa-whatsapp"></i> +506 8329-3582
+    </a>
+  </p>
+</div>
+
+      <div class="col-md-3 mb-3">
+        <h6 class="text-uppercase fw-bold">Horario</h6>
+        <p class="mb-0">Lunes a Viernes:<br />07:00 - 16:00</p>
+      </div>
+
+      <div class="col-md-3 mb-3 text-center text-md-start">
+        <h6 class="text-uppercase fw-bold">Cómo llegar</h6>
+        <a href="https://www.waze.com/es/live-map/directions?to=ll.9.93612%2C-84.12002" target="_blank">
+          <img src="http://agiocr.com/images/encuentrenos-waze.jpg" alt="Encuéntrenos en Waze" class="img-fluid rounded shadow" style="max-width: 150px;">
+        </a>
+      </div>
+    </div>
+    <div class="row border-top pt-3">
+      <div class="col text-center">
+        <nav class="footer-nav">
+          <a href="index.html" class="footer-link text-white mx-2 text-decoration-none">Inicio</a>
+          <a href="agenda.html" class="footer-link text-white mx-2 text-decoration-none">Agenda de Cursos</a>
+          <a href="organizacion.html" class="footer-link text-white mx-2 text-decoration-none">Organización</a>
+          <a href="coopInt.html" class="footer-link text-white mx-2 text-decoration-none">Cooperación Internacional</a>
+        </nav>
+      </div>
+    </div>
+    <div class="row pt-2">
+      <div class="col text-center">
+        <p class="mb-0">&copy; 2025 AGIO Gestoría de Negocios S.A. | Todos los derechos reservados</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+<script>
+  AOS.init({
+    once: true,
+  });
+</script>
+
+</body>
+</html>
+
